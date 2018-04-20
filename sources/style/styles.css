@@ -1,0 +1,53 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  background: black;
+}
+
+.space {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  max-height: calc(100vh - 5rem);
+  max-width: calc(100% - 5rem);
+}
+
+.rocket {
+  position: absolute;
+  top: 0;
+  height: 5rem;
+  width: 5rem;
+  background-image: url('https://images.vexels.com/media/users/3/145820/isolated/preview/7659c36de6f70eaf26a1854af11ac710-rocket-clipart-by-vexels.png');
+  background-size: contain;
+  transform: rotate(0deg);
+  transition: transform .3s;
+}
+
+.rocket:not(.client) {
+  opacity: .5;
+}
+
+[data-orientation = "up"] {
+  /* background: red; */
+  transform: rotate(0deg);
+}
+
+[data-orientation = "down"] {
+  /* background: green; */
+  transform: rotate(180deg);
+}
+
+[data-orientation = "left"] {
+  /* background: blue; */
+  transform: rotate(-90deg);
+}
+
+[data-orientation = "right"] {
+  /* background: yellow; */
+  transform: rotate(90deg);
+}
