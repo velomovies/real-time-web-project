@@ -1,11 +1,15 @@
 const express = require('express')
+const dotenv = require('dotenv')
 const app = express()
 const nunjucks = require('nunjucks')
 const fetch = require('node-fetch')
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
 
-const rockets = []
+dotenv.config()
+
+let rockets = []
+let nsaData = {}
 
 const dayInMilliseconds = 1000 * 60 * 60 * 24
 
@@ -13,7 +17,7 @@ let today = new Date()
 let dd = today.getDate()
 let mm = today.getMonth() + 1
 let yyyy = today.getFullYear()
-let apiKey = 'Demo_Key'
+let apiKey = process.env.API_KEY
 
 const api = {
   nsaData: function () {
@@ -23,26 +27,18 @@ const api = {
     })
     .then(function (data) {
       nsaData = data.near_earth_objects[Object.keys(data.near_earth_objects)[0]]
+      nsaData.forEach(function (data) {
+        data.size = data.estimated_diameter.meters.estimated_diameter_max / 5
+        data.top = Math.random() * 85 + 5
+        data.left = Math.random() * 85 + 5
+      })
       console.log(nsaData)
+      return nsaData
     })
-  }, 
-  interval: function () {
-    setInterval(function () { 
-      today = new Date()
-      dd = today.getDate()
-      mm = today.getMonth() + 1
-      yyyy = today.getFullYear()
-    
-      console.log('interval')
-
-      api.nsaData()
-    
-     }, dayInMilliseconds)
   }
 }
 
 api.nsaData()
-api.interval()
 
 app.use(express.static(__dirname + '/sources'))
 
@@ -52,7 +48,9 @@ nunjucks.configure('sources/views', {
 })
 
 app.get('/', function (req, res){
-  res.render('index.html')
+  res.render('index.html', {
+    data: nsaData
+  })
 })
 
 io.on('connection', function (socket) {
@@ -61,7 +59,7 @@ io.on('connection', function (socket) {
   }
   rockets.push(obj)
 
-  io.to(socket.id).emit('hello', rockets)
+  io.to(socket.id).emit('hello', {rocketsArray: rockets, nsaData: nsaData})
   socket.broadcast.emit('userConnection', {userId: socket.id})  
 
   socket.on('flying', function (data) {
@@ -75,6 +73,28 @@ io.on('connection', function (socket) {
     socket.broadcast.emit('flying', data)
   })
 
+  socket.on('landing', function (data) {
+    console.log(data)
+    rockets.forEach(function (userRocket) {
+      if (userRocket.userId === data.userId) {
+          userRocket.neoId = data.neoId
+      }
+    })
+    socket.broadcast.emit('landing', data)
+  })
+
+  socket.on('launch', function (data) {
+    rockets.forEach(function (userRocket) {
+      if (userRocket.userId === data.userId) {
+          userRocket.neoId = false
+          userRocket.rocketLeft = 0
+          userRocket.rocketTop = 0
+          userRocket.orientation = 'up'
+      }
+    })
+    socket.broadcast.emit('launch', data)
+  })
+
   socket.on('disconnect', function () {
     rockets.forEach(function (userRocket, i) {
       if (userRocket.userId === socket.id) {
@@ -85,7 +105,6 @@ io.on('connection', function (socket) {
   })
 })
 
-http.listen(process.env.PORT || 3000, function () {
+http.listen(process.env.PORT, function () {
   console.log('listening');
 })
-    

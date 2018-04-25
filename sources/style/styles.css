@@ -7,47 +7,161 @@
 body {
   font-family: sans-serif;
   background: black;
+  overflow: hidden;
 }
 
-.space {
+.🌌 {
   position: relative;
   height: 100vh;
   width: 100vw;
   max-height: calc(100vh - 5rem);
-  max-width: calc(100% - 5rem);
+  max-width: calc(100vw - 5rem);
 }
 
-.rocket {
+.animationOpenAstroid {
+  animation: openAstroid 1s ease-out forwards;
+  z-index: 3;
+}
+
+.🌠 {
   position: absolute;
   top: 0;
-  height: 5rem;
-  width: 5rem;
+  left: 0;
+  min-width: 10px;
+  min-height: 10px;
+  border-radius: 50%;
+  color: white;
+  background: red;
+  transition: all .3s;
+}
+
+.🚀 {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+}
+
+.🚀 .image {
   background-image: url('https://images.vexels.com/media/users/3/145820/isolated/preview/7659c36de6f70eaf26a1854af11ac710-rocket-clipart-by-vexels.png');
   background-size: contain;
   transform: rotate(0deg);
   transition: transform .3s;
+  height: 5rem;
+  width: 5rem;
 }
 
-.rocket:not(.client) {
+.🚀:not(.client) {
   opacity: .5;
 }
 
-[data-orientation = "up"] {
-  /* background: red; */
+.landing {
+  position: absolute;
+  opacity: 0;
+  animation: landing 3s ease-out forwards .5s;
+  bottom: 0;
+  right: 0;
+}
+
+.landing .image, .launch .image {
+  background-image: url('https://images.vexels.com/media/users/3/145820/isolated/preview/7659c36de6f70eaf26a1854af11ac710-rocket-clipart-by-vexels.png');
+  background-size: contain;
+  height: 10rem;
+  width: 10rem;
+}
+
+.land {
+  animation: land 3s ease-out forwards;
+}
+
+.launch {
+  position: absolute;
+  opacity: 0;
+  animation: launching 3s ease-in forwards;
+  bottom: 0;
+  right: 0;
+}
+
+article {
+  opacity: 0;
+  animation: fadeIn 1s ease forwards 3s;
+}
+
+[data-orientation = "up"] .image {
   transform: rotate(0deg);
 }
 
-[data-orientation = "down"] {
-  /* background: green; */
+[data-orientation = "down"] .image {
   transform: rotate(180deg);
 }
 
-[data-orientation = "left"] {
-  /* background: blue; */
+[data-orientation = "left"] .image {
   transform: rotate(-90deg);
 }
 
-[data-orientation = "right"] {
-  /* background: yellow; */
+[data-orientation = "right"] .image {
   transform: rotate(90deg);
+}
+
+@keyframes openAstroid {
+  0% {
+  }
+
+  99% {
+    width: 150vw;
+    height: 150vw;
+    left: -25vw;
+    top: -25vw;
+    border-radius: 50%;
+  }
+
+  100% {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    top: 0;
+    left: 0;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translatey(1.5em);
+  }
+  100% {
+    opacity: 1;
+    transform: translatey(0);
+  }
+}
+
+@keyframes landing {
+  from {
+    transform: translateY(-150vh);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes launching {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-150vh);
+    opacity: 0;
+  }
+}
+
+@keyframes land {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
 }
