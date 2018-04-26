@@ -4,6 +4,10 @@
   box-sizing: border-box;
 }
 
+:focus {
+  outline: none;
+}
+
 body {
   font-family: sans-serif;
   background: black;
@@ -35,6 +39,71 @@ body {
   transition: all .3s;
 }
 
+.🌠 > p {
+  font-size: .8em;
+  margin: -2em;
+}
+
+.animationOpenAstroid > p {
+  display: none;
+}
+
+.🌠 > article {
+  width: 80%;
+  margin: auto;
+}
+
+.🌠 > article p {
+  margin: 1em 0;
+}
+
+.🌠 > article h1 {
+  margin-top: 12.5vh;
+}
+
+.🌠 > article a {
+  color: white;
+}
+
+.🌠 > article a:hover {
+  text-decoration: none;
+}
+
+.🌠 > article button {
+    display: block;
+    margin: 5em auto;
+    border: none;
+    background: black;
+    color: white;
+    border-radius: 50%;
+    height: 5em;
+    width: 5em;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+.🌠 > article button:hover, .🌠 > article button:focus {
+  background: white;
+  color: black;
+}
+
+.🌠 .flag {
+  position: absolute;
+  background-image: url('https://42f2671d685f51e10fc6-b9fcecea3e50b3b59bdc28dead054ebc.ssl.cf5.rackcdn.com/illustrations/Astronaut_0o7w.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 5em;
+  height: 5em;
+  /* background: green; */
+}
+
+.animationOpenAstroid .flag {
+  bottom: 0;
+  left: 1em;
+  width: 7em;
+  height: 7em;
+}
+
 .🚀 {
   position: absolute;
   top: 0;
@@ -60,6 +129,7 @@ body {
   animation: landing 3s ease-out forwards .5s;
   bottom: 0;
   right: 0;
+  z-index: 2;
 }
 
 .landing .image, .launch .image {
@@ -79,6 +149,7 @@ body {
   animation: launching 3s ease-in forwards;
   bottom: 0;
   right: 0;
+  z-index: 2;
 }
 
 article {
@@ -164,4 +235,20 @@ article {
     transform: scale(0);
     opacity: 0;
   }
+}
+
+.error {
+  text-align: center;
+  position: absolute;
+  background: red;
+  width: 100%;
+  color: #fff;
+  padding: 1em;
+  transform: translateY(-5em);
+  transition: all .3s;
+  z-index: 4;
+}
+
+.show {
+  transform: translateY(0);
 }

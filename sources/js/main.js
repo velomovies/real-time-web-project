@@ -13,29 +13,37 @@
     },
     handleDataEvents: function () {
       this.io.on('hello', function (data) {
-        astroid.nsaData = data.nsaData
-        astroid.init()
-        data.rocketsArray.forEach(function (dataItem) {
-          if (dataItem.userId !== socket.io.id) {
-            console.log(dataItem) 
-            rocket.create(dataItem)
-            if (dataItem.rocketTop || dataItem.rocketLeft) {
-              if(dataItem.neoId) {
-                rocket.land(dataItem)
+        if (!space.isOffline) {
+          astroid.nsaData = data.nsaData
+          astroid.init()
+          data.rocketsArray.forEach(function (dataItem) {
+            if (dataItem.userId !== socket.io.id) {
+              console.log(dataItem) 
+              rocket.create(dataItem)
+              if (dataItem.rocketTop || dataItem.rocketLeft) {
+                if(dataItem.neoId) {
+                  rocket.land(dataItem)
+                }
+                rocket.position(dataItem.rocketTop, dataItem.rocketLeft, dataItem.orientation, dataItem.userId)
               }
-              rocket.position(dataItem.rocketTop, dataItem.rocketLeft, dataItem.orientation, dataItem.userId)
-            }
-          }  
-        })
+            }  
+          })
+        }        
       })
       this.io.on('disconnection', function (data) {
         rocket.delete(data)
+        let selectAstroidFlag = document.querySelector('.' + data.userId)
+        if(selectAstroidFlag) {
+          selectAstroidFlag.parentNode.removeChild(selectAstroidFlag)
+        }
       })
       this.io.on('userConnection', function (data) {
           rocket.create(data)
       })
       this.io.on('flying', function (data) {
-        let selectUserEl = document.querySelector('[data-user="' + data.userId + '"]')
+        let dataNumber = data.userId
+        let dataString = dataNumber.toString()
+        let selectUserEl = document.querySelector('[data-user="' + dataString + '"]')
         if (!selectUserEl) {
           rocket.create(data)
         } else {
@@ -49,13 +57,38 @@
         console.log(data)
         let selectUserEl = document.querySelector('[data-user="' + data.userId + '"]')
         let selectAstroid = document.querySelector('[data-id="' + data.neoId + '"]')
-        let selectAstroidFlag = selectAstroid.querySelector('.flag')
+        let selectAstroidFlag = selectAstroid.querySelector('.' + data.userId)
         selectAstroidFlag.parentNode.removeChild(selectAstroidFlag)
         selectUserEl.classList.remove('land')
         selectUserEl.style.top = 0
         selectUserEl.style.left = 0
         selectUserEl.dataset.orientation = 'up'
       })
+      this.io.on('connect_error', function () {
+        let errorMessage = document.querySelector('.error')
+        errorMessage.classList.add('show')
+        space.isOffline = true
+      })
+      this.io.on('connect', function () {
+        if (space.isOffline) {
+          socket.countDown()
+        }
+      })
+    },
+    countDown: function () {
+      let timeleft = 10
+      let countdownTimer = setInterval(function() {
+
+        timeleft--
+
+        let errorMessage = document.querySelector('.error p')
+        errorMessage.innerHTML = 'De pagina wordt over ' + timeleft + ' seconden herladen'
+
+        if (timeleft <= 0) {
+          location.reload()
+          clearInterval(countdownTimer)
+        }
+      }, 1000);
     }
   }
 
@@ -150,7 +183,7 @@
             && selectRocket.left + selectRocket.width / 2 > data.middle.x - rocket.easing) {
               detaiPage.open = true
               socket.emit('landing', {neoId: data.neo_reference_id, userId: socket.io.id})
-              detaiPage.render(data.neo_reference_id)
+              detaiPage.render(data)
           }
         })
       }
@@ -160,9 +193,12 @@
       let selectAstroid = document.querySelector('[data-id="' + data.neoId + '"]')
       selectUserEl.classList.add('land')
 
+      let newFlagDiv = document.createElement('div')
       let newFlag = document.createElement('div')
-      newFlag.classList.add('flag')
+      newFlagDiv.classList.add('flag')
+      newFlag.classList.add(data.userId)
 
+      newFlag.appendChild(newFlagDiv)
       selectAstroid.appendChild(newFlag)
     },
     launch: function (id) {
@@ -194,6 +230,7 @@
   }
 
   const astroid = {
+    nsaData: {},
     init: function () {
       astroid.create()
     },
@@ -203,6 +240,7 @@
     create: function () {
       astroid.nsaData.forEach(function (data) {
         let newAstroid = document.createElement('div')
+        let newAstroidp = document.createElement('p')
         let newAstroidText = document.createTextNode(data.name)
   
         newAstroid.classList.add('🌠')
@@ -213,7 +251,8 @@
         newAstroid.style.width = data.size + 'px'
         newAstroid.style.height = data.size + 'px'
 
-        newAstroid.appendChild(newAstroidText)
+        newAstroidp.appendChild(newAstroidText)
+        newAstroid.appendChild(newAstroidp)
         space.selectEl.appendChild(newAstroid)
 
         data.middle = {
@@ -233,8 +272,8 @@
 
   const detaiPage = {
     open: false,
-    render: function (id) {
-      let astroidSelect = document.querySelector('[data-id="' + id + '"]')
+    render: function (data) {
+      let astroidSelect = document.querySelector('[data-id="' + data.neo_reference_id + '"]')
 
       let landingRocket = document.createElement('div')
       let landingRocketImage = document.createElement('div')
@@ -243,24 +282,37 @@
       landingRocketImage.classList.add('image')
 
       let infoAstroid = document.createElement('article')
-      let pAstroid = document.createElement('p')
       let button = document.createElement('button')
       let buttonText = document.createTextNode('Launch')
 
       button.appendChild(buttonText)
 
       button.addEventListener('click', function (e) {
-        rocket.launch(id)
+        rocket.launch(data.neo_reference_id)
       })
 
       landingRocket.appendChild(landingRocketImage)
       astroidSelect.appendChild(landingRocket)
 
-      infoAstroid.appendChild(pAstroid)
+      detaiPage.fillText(data, infoAstroid)
+
       infoAstroid.appendChild(button)
       astroidSelect.appendChild(infoAstroid)
 
       astroidSelect.classList.add('animationOpenAstroid')
+    },
+    fillText: function (data, infoAstroid) {
+      console.log(data)
+      let text = `
+      <h1>This is ${data.name}</h1>
+      <p>This asteroid is orbiting ${data.close_approach_data[0].orbiting_body} and is going ${data.close_approach_data[0].relative_velocity.kilometers_per_hour} km/h.
+      <p>Its estimated diameter is between ${Math.floor(Number(data.estimated_diameter.meters.estimated_diameter_min))}m and ${Math.floor(Number(data.estimated_diameter.meters.estimated_diameter_max))}m. It is probable not a circle, hence the numbers can differ so much.</p>
+      <p>Today it will be as close as ${data.close_approach_data[0].miss_distance.kilometers} kilometers to earth.</p>
+
+      <a href="${data.nasa_jpl_url}" target="_blank">Read more about this asteroid</a>
+      `
+
+      infoAstroid.insertAdjacentHTML('afterbegin', text)
     }
   }
 
